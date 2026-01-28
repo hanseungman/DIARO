@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite'
+import { copyFileSync } from 'fs'
 
 export default defineConfig({
   base: './',
@@ -10,5 +11,13 @@ export default defineConfig({
         main: './index.html'
       }
     }
-  }
+  },
+  plugins: [
+    {
+      name: 'copy-readme',
+      closeBundle() {
+        copyFileSync('README.md', 'dist/README.md')
+      }
+    }
+  ]
 })

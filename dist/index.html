@@ -380,7 +380,7 @@
 <body>
     <!-- 로고 클릭 영역 -->
     <div class="logo-trigger" onclick="openModal()">
-        <img src="/assets/images/logo.png" alt="DIARO Logo">
+        <img src="./assets/images/logo.png" alt="DIARO Logo">
     </div>
     
     <!-- README 모달 -->
@@ -395,7 +395,7 @@
     <!-- Intro Section -->
     <section>
         <video autoplay muted loop playsinline>
-            <source src="/assets/videos/hero-intro.mp4" type="video/mp4">
+            <source src="./assets/videos/hero-intro.mp4" type="video/mp4">
         </video>
     </section>
 
@@ -404,7 +404,7 @@
         <div class="section-grid">
             <div class="media-box">
                 <video autoplay muted loop playsinline>
-                    <source src="/assets/videos/01-awareness-esungan.mp4" type="video/mp4">
+                    <source src="./assets/videos/01-awareness-esungan.mp4" type="video/mp4">
                 </video>
             </div>
             <div class="text-content">
@@ -421,7 +421,7 @@
         <div class="section-grid reverse">
             <div class="media-box">
                 <video autoplay muted loop playsinline>
-                    <source src="/assets/videos/02-resonance-smudeun.mp4" type="video/mp4">
+                    <source src="./assets/videos/02-resonance-smudeun.mp4" type="video/mp4">
                 </video>
             </div>
             <div class="text-content">
@@ -437,7 +437,7 @@
     <section>
         <div class="section-grid">
             <div class="media-box">
-                <img src="/assets/images/03-rest-desk.jpg" alt="안식">
+                <img src="./assets/images/03-rest-desk.jpg" alt="안식">
             </div>
             <div class="text-content">
                 <span class="step">STEP 3</span>
@@ -452,7 +452,7 @@
     <section>
         <div class="section-grid reverse">
             <div class="media-box">
-                <img src="/assets/images/04-reflection-note.jpg" alt="사유">
+                <img src="./assets/images/04-reflection-note.jpg" alt="사유">
             </div>
             <div class="text-content">
                 <span class="step">STEP 4</span>
@@ -466,7 +466,7 @@
     <!-- Outro Section -->
     <section class="outro-section">
         <video autoplay muted loop playsinline>
-            <source src="/assets/videos/hero-outro.mp4" type="video/mp4">
+            <source src="./assets/videos/hero-outro.mp4" type="video/mp4">
         </video>
     </section>
 
@@ -482,8 +482,13 @@
             
             // README 내용 로드
             if (!document.getElementById('readmeContent').innerHTML) {
-                fetch('/README.md')
-                    .then(response => response.text())
+                fetch('./README.md')
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('README.md not found');
+                        }
+                        return response.text();
+                    })
                     .then(text => {
                         // Marked 설정: heading에 ID 자동 생성
                         marked.setOptions({

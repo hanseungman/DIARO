@@ -482,8 +482,13 @@
             
             // README 내용 로드
             if (!document.getElementById('readmeContent').innerHTML) {
-                fetch('/README.md')
-                    .then(response => response.text())
+                fetch('./README.md')
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('README.md not found');
+                        }
+                        return response.text();
+                    })
                     .then(text => {
                         // Marked 설정: heading에 ID 자동 생성
                         marked.setOptions({
