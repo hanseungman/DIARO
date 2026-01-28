@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DIARO</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Noto Sans KR', -apple-system, sans-serif;
+            background: #000;
+            color: #fff;
+            overflow-x: hidden;
+        }
+        
+        section {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* 배경 비디오만 전체 화면 */
+        section > video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        /* 첫 번째 섹션 비디오는 원본 사이즈 유지 */
+        section:first-of-type > video {
+            position: relative;
+            width: 100%;
+            height: auto;
+            max-width: 100%;
+            object-fit: contain;
+        }
+        
+        section:first-of-type {
+            display: block;
+            padding: 0;
+        }
+        
+        h2 {
+            font-size: clamp(2rem, 5vw, 3rem);
+            font-weight: 300;
+            margin-bottom: 20px;
+        }
+        
+        .section-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 40px;
+            align-items: center;
+            max-width: 1200px;
+            width: 100%;
+            padding: 60px 20px;
+            position: relative;
+            z-index: 10;
+            margin: 0 auto;
+        }
+        
+        @media (min-width: 768px) {
+            .section-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 60px;
+                padding: 60px 40px;
+            }
+        }
+        
+        .media-box {
+            width: 100%;
+            max-width: 100%;
+            aspect-ratio: 4/5;
+            overflow: hidden;
+            border-radius: 4px;
+            margin: 0 auto;
+        }
+        
+        @media (min-width: 768px) {
+            .media-box {
+                max-width: 450px;
+                margin: 0;
+            }
+        }
+        
+        .media-box img,
+        .media-box video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .text-content {
+            text-align: center;
+        }
+        
+        @media (min-width: 768px) {
+            .text-content {
+                text-align: left;
+            }
+        }
+        
+        .step {
+            font-size: clamp(0.75rem, 2vw, 0.875rem);
+            letter-spacing: 0.3em;
+            color: #999;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+            display: block;
+        }
+        
+        .subtitle {
+            font-size: clamp(1rem, 2.5vw, 1.25rem);
+            letter-spacing: 0.2em;
+            color: #ccc;
+            margin: 20px 0;
+        }
+        
+        .desc {
+            font-size: clamp(1rem, 2.5vw, 1.125rem);
+            line-height: 1.75;
+        }
+        
+        /* 섹션별 순서 조정 */
+        @media (max-width: 767px) {
+            .section-grid .media-box {
+                order: 1;
+            }
+            .section-grid .text-content {
+                order: 2;
+            }
+        }
+        
+        @media (min-width: 768px) {
+            .section-grid.reverse .media-box {
+                order: 2;
+            }
+            .section-grid.reverse .text-content {
+                order: 1;
+            }
+        }
+        
+        .outro-section {
+            background: #000;
+            color: #fff;
+        }
+        
+        /* 로고 이미지 */
+        .logo-trigger {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 9999;
+            cursor: pointer;
+            width: auto;
+            height: auto;
+            transition: transform 0.3s, opacity 0.3s;
+            opacity: 0.8;
+        }
+        
+        .logo-trigger:hover {
+            transform: scale(1.1);
+            opacity: 1;
+        }
+        
+        .logo-trigger img {
+            width: 10%;
+            height: auto;
+            display: block;
+            min-width: 80px;
+            max-width: 150px;
+        }
+        
+        /* 모달 스타일 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 10000;
+            overflow: auto;
+        }
+        
+        .modal.active {
+            display: block;
+        }
+        
+        .modal-content {
+            background: #fff;
+            color: #000;
+            max-width: 900px;
+            max-height: 85vh;
+            margin: 50px auto;
+            padding: 40px;
+            padding-top: 20px;
+            border-radius: 8px;
+            position: relative;
+            overflow-y: auto;
+            text-align: left;
+        }
+        
+        .modal-close {
+            position: sticky;
+            top: 10px;
+            float: right;
+            font-size: 40px;
+            font-weight: bold;
+            color: #666;
+            cursor: pointer;
+            line-height: 1;
+            transition: color 0.3s;
+            z-index: 1001;
+            background: rgba(255, 255, 255, 0.95);
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            margin-bottom: -40px;
+            margin-right: 0;
+        }
+        
+        .modal-toc-btn {
+            position: sticky;
+            bottom: 20px;
+            font-size: 30px;
+            cursor: pointer;
+            z-index: 1001;
+            background: rgba(255, 255, 255, 0.95);
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s, background 0.3s;
+            margin-left: auto;
+            margin-right: -10px;
+            margin-top: 20px;
+        }
+        
+        .modal-toc-btn:hover {
+            transform: scale(1.1);
+            background: rgba(255, 255, 255, 1);
+        }
+        
+        .modal-close:hover {
+            color: #000;
+        }
+        
+        .readme-content {
+            line-height: 1.8;
+            text-align: left !important;
+            clear: both;
+        }
+        
+        .readme-content * {
+            text-align: left !important;
+        }
+        
+        .readme-content div[align="center"],
+        .readme-content div[align="right"] {
+            text-align: left !important;
+        }
+        
+        .readme-content h1 {
+            font-size: 2.5rem;
+            margin-top: 0;
+            margin-bottom: 3px;
+            border-bottom: 3px solid #000;
+            padding-bottom: 8px;
+            padding-right: 60px;
+            padding-left: 0;
+            display: block !important;
+            text-align: left !important;
+            clear: both;
+            width: 100%;
+            margin-left: 0 !important;
+            margin-right: auto !important;
+            line-height: 1;        
+        }
+        
+        .readme-content h1 img {
+            height: 0.8em;
+            width: auto;
+            margin-right: 0.2em;
+            display: inline-block !important;
+            vertical-align: middle;
+            box-shadow: none;
+            filter: none;
+            float: none !important;
+            position: relative;
+            top: -0.13em;
+        }
+        
+        .readme-content h2 {
+            font-size: 2rem;
+            margin-top: 40px;
+            margin-bottom: 15px;
+            color: #000;
+        }
+        
+        .readme-content h3 {
+            font-size: 1.5rem;
+            margin-top: 30px;
+            margin-bottom: 10px;
+        }
+        
+        .readme-content p {
+            margin-bottom: 15px;
+            font-size: 1rem;
+            color: #333;
+        }
+        
+        .readme-content ul, .readme-content ol {
+            margin-left: 50px;
+            margin-bottom: 15px;
+        }
+        
+        .readme-content li {
+            margin-bottom: 8px;
+        }
+        
+        .readme-content code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .readme-content pre {
+            background: #1e1e1e;
+            color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+        
+        .readme-content pre code {
+            background: none;
+            padding: 0;
+            color: #fff;
+        }
+        
+        .readme-content blockquote {
+            border-left: 4px solid #000;
+            padding-left: 20px;
+            margin: 20px 0;
+            font-style: italic;
+            color: #555;
+        }
+        
+        .readme-content img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 20px auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <!-- 로고 클릭 영역 -->
+    <div class="logo-trigger" onclick="openModal()">
+        <img src="/assets/images/logo.png" alt="DIARO Logo">
+    </div>
+    
+    <!-- README 모달 -->
+    <div id="readmeModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeModal()">&times;</span>
+            <div id="readmeContent" class="readme-content"></div>
+            <div class="modal-toc-btn" onclick="scrollToTOC()" title="목차로 이동">📋</div>
+        </div>
+    </div>
+    
+    <!-- Intro Section -->
+    <section>
+        <video autoplay muted loop playsinline>
+            <source src="/assets/videos/hero-intro.mp4" type="video/mp4">
+        </video>
+    </section>
+
+    <!-- Section 1: 자각 -->
+    <section>
+        <div class="section-grid">
+            <div class="media-box">
+                <video autoplay muted loop playsinline>
+                    <source src="/assets/videos/01-awareness-esungan.mp4" type="video/mp4">
+                </video>
+            </div>
+            <div class="text-content">
+                <span class="step">STEP 1</span>
+                <h2>자각 (自覺)</h2>
+                <div class="subtitle">이순간 (ESUNGAN)</div>
+                <p class="desc">과거도 미래도 아닌, 내가 통제할 수 있는 유일한 실체.<br>지금, 여기. 당신의 호흡에 귀 기울이세요.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 2: 공명 -->
+    <section>
+        <div class="section-grid reverse">
+            <div class="media-box">
+                <video autoplay muted loop playsinline>
+                    <source src="/assets/videos/02-resonance-smudeun.mp4" type="video/mp4">
+                </video>
+            </div>
+            <div class="text-content">
+                <span class="step">STEP 2</span>
+                <h2>공명 (共鳴)</h2>
+                <div class="subtitle">스머든 (SMUDEUN)</div>
+                <p class="desc">창가의 바람, 계절의 온도, 하늘의 빛깔.<br>우주의 기운이 당신에게 스며들어 하나가 됩니다.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 3: 안식 -->
+    <section>
+        <div class="section-grid">
+            <div class="media-box">
+                <img src="/assets/images/03-rest-desk.jpg" alt="안식">
+            </div>
+            <div class="text-content">
+                <span class="step">STEP 3</span>
+                <h2>안식 (安息)</h2>
+                <div class="subtitle">하우리 (HAURI)</div>
+                <p class="desc">나의 취향, 나의 손때, 나의 사물들.<br>내 손끝이 닿는 모든 것이 나의 우주가 됩니다.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 4: 사유 -->
+    <section>
+        <div class="section-grid reverse">
+            <div class="media-box">
+                <img src="/assets/images/04-reflection-note.jpg" alt="사유">
+            </div>
+            <div class="text-content">
+                <span class="step">STEP 4</span>
+                <h2>사유 (思惟)</h2>
+                <div class="subtitle">노티모 (NOTIMO)</div>
+                <p class="desc">흩어지는 감각을 붙잡아 나의 역사로 새기는 일.<br>당신의 기록은 우주를 움직이는 궤적이 됩니다.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Outro Section -->
+    <section class="outro-section">
+        <video autoplay muted loop playsinline>
+            <source src="/assets/videos/hero-outro.mp4" type="video/mp4">
+        </video>
+    </section>
+
+    <!-- Marked.js for Markdown parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    
+    <script>
+        // README 모달 관리
+        function openModal() {
+            const modal = document.getElementById('readmeModal');
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            
+            // README 내용 로드
+            if (!document.getElementById('readmeContent').innerHTML) {
+                fetch('/README.md')
+                    .then(response => response.text())
+                    .then(text => {
+                        // Marked 설정: heading에 ID 자동 생성
+                        marked.setOptions({
+                            headerIds: true,
+                            mangle: false
+                        });
+                        
+                        document.getElementById('readmeContent').innerHTML = marked.parse(text);
+                        
+                        // 약간의 지연 후 링크 설정
+                        setTimeout(() => {
+                            setupAnchorLinks();
+                            setupExternalLinks();
+                        }, 100);
+                    })
+                    .catch(error => {
+                        document.getElementById('readmeContent').innerHTML = '<p>README 파일을 불러올 수 없습니다.</p>';
+                        console.error('Error loading README:', error);
+                    });
+            } else {
+                // 이미 로드된 경우에도 링크 설정
+                setupAnchorLinks();
+                setupExternalLinks();
+            }
+        }
+        
+        // 외부 링크 처리
+        function setupExternalLinks() {
+            const readmeContent = document.getElementById('readmeContent');
+            const links = readmeContent.querySelectorAll('a:not([href^="#"])');
+            
+            console.log('Setting up external links, found:', links.length);
+            
+            links.forEach(link => {
+                const newLink = link.cloneNode(true);
+                link.parentNode.replaceChild(newLink, link);
+                
+                newLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    const href = this.getAttribute('href');
+                    console.log('External link clicked:', href);
+                    
+                    // mailto 링크는 별도 처리
+                    if (href.startsWith('mailto:')) {
+                        const email = href.replace('mailto:', '');
+                        const confirmed = confirm(`이메일 클라이언트를 열까요?\n\n${email}`);
+                        if (confirmed) {
+                            window.location.href = href;
+                        }
+                        return;
+                    }
+                    
+                    // 일반 URL 링크 처리
+                    const confirmed = confirm(`새 창에서 열까요?\n\n${href}\n\n확인: 새 창에서 열기\n취소: 이동하지 않기`);
+                    
+                    if (confirmed) {
+                        // 새 창으로 열기 시도
+                        const newWindow = window.open(href, '_blank', 'noopener,noreferrer');
+                        
+                        // 팝업이 차단되었는지 확인
+                        setTimeout(() => {
+                            if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+                                // 팝업이 차단된 경우
+                                const moveConfirmed = confirm(`팝업이 차단되었습니다.\n\n${href}\n\n현재 페이지에서 이동하시겠습니까?`);
+                                if (moveConfirmed) {
+                                    window.location.href = href;
+                                }
+                            }
+                        }, 100);
+                    }
+                });
+            });
+        }
+        
+        // 모달 내부의 앵커 링크 처리
+        function setupAnchorLinks() {
+            const modalContent = document.querySelector('.modal-content');
+            const readmeContent = document.getElementById('readmeContent');
+            const links = readmeContent.querySelectorAll('a[href^="#"]');
+            
+            console.log('Setting up anchor links, found:', links.length);
+            
+            // 텍스트 정규화 함수
+            function normalizeText(text) {
+                return text
+                    .replace(/[^\w\s가-힣]/g, '') // 이모지, 특수문자 제거
+                    .replace(/\s+/g, '-')          // 공백을 하이픈으로
+                    .toLowerCase()
+                    .trim();
+            }
+            
+            // 모든 헤딩 매핑
+            const headingMap = new Map();
+            const headings = readmeContent.querySelectorAll('h1, h2, h3, h4, h5, h6');
+            
+            headings.forEach(heading => {
+                const id = heading.getAttribute('id');
+                const text = heading.textContent.trim();
+                const normalized = normalizeText(text);
+                
+                console.log('Heading text:', text, '| ID:', id, '| Normalized:', normalized);
+                
+                if (id) headingMap.set(id, heading);
+                headingMap.set(normalized, heading);
+                headingMap.set(text.toLowerCase(), heading);
+            });
+            
+            links.forEach(link => {
+                const newLink = link.cloneNode(true);
+                link.parentNode.replaceChild(newLink, link);
+                
+                newLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    const href = this.getAttribute('href');
+                    let targetId = href.substring(1);
+                    
+                    // URL 디코딩
+                    try {
+                        targetId = decodeURIComponent(targetId);
+                    } catch (e) {}
+                    
+                    // 앞의 하이픈 제거
+                    targetId = targetId.replace(/^-+/, '');
+                    
+                    console.log('Searching for targetId:', targetId);
+                    
+                    let targetElement = null;
+                    
+                    // 1. 직접 ID 매치
+                    targetElement = headingMap.get(targetId);
+                    
+                    // 2. 정규화해서 매치
+                    if (!targetElement) {
+                        const normalized = normalizeText(targetId);
+                        targetElement = headingMap.get(normalized);
+                        console.log('Trying normalized:', normalized);
+                    }
+                    
+                    // 3. 부분 매칭
+                    if (!targetElement) {
+                        const searchTerms = targetId.toLowerCase().split('-').filter(t => t);
+                        
+                        for (let [key, heading] of headingMap) {
+                            if (typeof key === 'string') {
+                                const keyLower = key.toLowerCase();
+                                const matchCount = searchTerms.filter(term => keyLower.includes(term)).length;
+                                
+                                if (matchCount >= searchTerms.length * 0.7) {
+                                    targetElement = heading;
+                                    console.log('Partial match found:', key);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    
+                    if (targetElement) {
+                        console.log('✓ Found target, scrolling to:', targetElement.textContent);
+                        const offsetTop = targetElement.offsetTop - 80;
+                        modalContent.scrollTo({
+                            top: offsetTop,
+                            behavior: 'smooth'
+                        });
+                    } else {
+                        console.warn('✗ Target not found for:', targetId);
+                    }
+                });
+            });
+        }
+        
+        function closeModal() {
+            const modal = document.getElementById('readmeModal');
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+        
+        // 목차로 스크롤
+        function scrollToTOC() {
+            const modalContent = document.querySelector('.modal-content');
+            const readmeContent = document.getElementById('readmeContent');
+            const tocHeading = readmeContent.querySelector('h2');
+            
+            if (tocHeading) {
+                const offsetTop = tocHeading.offsetTop - 80;
+                modalContent.scrollTo({
+                    top: offsetTop,
+                    behavior: 'smooth'
+                });
+            }
+        }
+        
+        // ESC 키로 모달 닫기
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+        
+        // 모달 배경 클릭 시 닫기
+        document.getElementById('readmeModal').addEventListener('click', (e) => {
+            if (e.target.id === 'readmeModal') {
+                closeModal();
+            }
+        });
+    </script>
+    
+    <script>
+        // 자동 스크롤 기능
+        let scrollInterval;
+        let pauseTimeout;
+        let userInteracted = false;
+        
+        function startAutoScroll() {
+            clearInterval(scrollInterval);
+            clearTimeout(pauseTimeout);
+            
+            const scrollSpeed = 0.5; // 픽셀/프레임 (작을수록 느림)
+            
+            scrollInterval = setInterval(() => {
+                const currentScroll = window.pageYOffset;
+                const scrollHeight = document.documentElement.scrollHeight;
+                const clientHeight = document.documentElement.clientHeight;
+                const maxScroll = scrollHeight - clientHeight;
+                
+                // 아래로 천천히 스크롤
+                if (currentScroll < maxScroll - 1) {
+                    window.scrollBy(0, scrollSpeed);
+                } else {
+                    // 맨 아래 도달 - 5초 대기 후 맨 위로 이동하고 다시 시작
+                    clearInterval(scrollInterval);
+                    pauseTimeout = setTimeout(() => {
+                        window.scrollTo(0, 0); // 맨 위로 즉시 이동
+                        setTimeout(() => {
+                            startAutoScroll(); // 다시 아래로 스크롤 시작
+                        }, 100);
+                    }, 5000);
+                }
+            }, 16); // 60fps (약 16ms마다 실행)
+        }
+        
+        // 페이지 로드 후 5초 뒤에 자동 스크롤 시작
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                startAutoScroll();
+            }, 5000);
+        });
+        
+        // 사용자가 직접 스크롤하거나 터치하면 자동 스크롤 중지
+        let userScrollTimeout;
+        
+        function handleUserInteraction() {
+            clearInterval(scrollInterval);
+            clearTimeout(pauseTimeout);
+            clearTimeout(userScrollTimeout);
+            
+            userInteracted = true;
+            
+            // 10초 동안 조작이 없으면 자동 스크롤 재개
+            userScrollTimeout = setTimeout(() => {
+                userInteracted = false;
+                startAutoScroll();
+            }, 10000);
+        }
+        
+        window.addEventListener('wheel', handleUserInteraction, { passive: true });
+        window.addEventListener('touchstart', handleUserInteraction, { passive: true });
+        window.addEventListener('keydown', (e) => {
+            // 방향키, 스페이스바, Page Up/Down 등
+            if ([32, 33, 34, 35, 36, 37, 38, 39, 40].includes(e.keyCode)) {
+                handleUserInteraction();
+            }
+        });
+    </script>
+</body>
+</html>
