@@ -2,7 +2,7 @@
 
 > Digital + Analog + Road : 디지털의 길 위에서 나라는 우주 한 점이 아날로그 영혼을 그려 나가다. 
 
-[![DIARO Preview](./public/assets/images/intro.png)](#📋-목차)
+[![DIARO Preview](./assets/images/intro.png)](#📋-목차)
 
 ## 📋 목차
 
